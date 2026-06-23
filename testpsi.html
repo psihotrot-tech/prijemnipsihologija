@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prijemni ispit — Psihologija</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+
+  :root {
+    --bg: #0f0f14;
+    --surface: #17171f;
+    --card: #1e1e2a;
+    --border: #2a2a3a;
+    --accent: #7c6af7;
+    --accent-soft: rgba(124,106,247,0.12);
+    --accent-hover: #9b8df9;
+    --correct: #3ecf8e;
+    --correct-soft: rgba(62,207,142,0.12);
+    --wrong: #f87171;
+    --wrong-soft: rgba(248,113,113,0.12);
+    --text: #e8e8f0;
+    --muted: #7a7a9a;
+    --tag: #2e2e42;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+
+  /* HEADER */
+  .header {
+    max-width: 760px;
+    margin: 0 auto 40px;
+    text-align: center;
+  }
+  .header-badge {
+    display: inline-block;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+    border: 1px solid rgba(124,106,247,0.25);
+  }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #e8e8f0 0%, #a89cf5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header p {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.6;
+    max-width: 520px;
+    margin: 0 auto 28px;
+  }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .stat {
+    text-align: center;
+  }
+  .stat-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* TIMER */
+  .timer-wrap {
+    max-width: 760px;
+    margin: 0 auto 32px;
+  }
+  .timer-bar-outer {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .timer-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+    border-radius: 2px;
+    transition: width 1s linear, background 0.5s;
+  }
+  .timer-bar-inner.warning { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+  .timer-bar-inner.danger  { background: linear-gradient(90deg, var(--wrong), #f97316); }
+  .timer-text {
+    text-align: right;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .timer-text.warning { color: #f59e0b; }
+  .timer-text.danger  { color: var(--wrong); }
+
+  /* PROGRESS */
+  .progress-wrap {
+    max-width: 760px;
+    margin: 0 auto 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .progress-label {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    min-width: 70px;
+  }
+  .progress-dots {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s;
+    flex-shrink: 0;
+  }
+  .dot.answered { background: var(--accent); }
+  .dot.current  { background: var(--accent-hover); box-shadow: 0 0 0 2px rgba(124,106,247,0.4); }
+
+  /* QUESTION CARD */
+  .q-container {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .q-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 16px;
+    display: none;
+    animation: fadeIn 0.25s ease;
+  }
+  .q-card.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .q-num {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+  }
+  .q-tag {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--tag);
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+  }
+
+  .q-text {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.65;
+    color: var(--text);
+    margin-bottom: 24px;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .option {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+    transition: all 0.18s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    text-align: left;
+  }
+  .option:hover:not(.locked) {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent-hover);
+  }
+  .option.selected {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent-hover);
+  }
+  .option.correct {
+    border-color: var(--correct);
+    background: var(--correct-soft);
+    color: var(--correct);
+  }
+  .option.wrong {
+    border-color: var(--wrong);
+    background: var(--wrong-soft);
+    color: var(--wrong);
+  }
+  .option.locked { cursor: default; }
+
+  .opt-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: var(--border);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.18s;
+  }
+  .option.selected .opt-letter { background: var(--accent); color: #fff; }
+  .option.correct  .opt-letter { background: var(--correct); color: #fff; }
+  .option.wrong    .opt-letter { background: var(--wrong); color: #fff; }
+
+  .explanation {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(124,106,247,0.07);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    display: none;
+  }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--text); }
+
+  /* NAV */
+  .nav-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 0;
+  }
+  .btn {
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-secondary {
+    background: var(--card);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* RESULT SCREEN */
+  #result-screen {
+    display: none;
+    max-width: 760px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .result-emoji { font-size: 64px; margin-bottom: 16px; }
+  .result-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #e8e8f0 0%, #a89cf5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .result-subtitle { color: var(--muted); font-size: 15px; margin-bottom: 36px; }
+
+  .result-score-big {
+    font-size: 72px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .result-score-label {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 36px;
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-bottom: 36px;
+    text-align: left;
+  }
+  @media (max-width: 500px) { .result-grid { grid-template-columns: 1fr; } }
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+  .result-card-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .result-card-val { font-size: 24px; font-weight: 700; }
+  .result-card-val.green { color: var(--correct); }
+  .result-card-val.red   { color: var(--wrong); }
+  .result-card-val.blue  { color: var(--accent); }
+
+  .area-breakdown {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 28px;
+    text-align: left;
+  }
+  .area-breakdown h3 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .area-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+  .area-name { min-width: 200px; color: var(--text); }
+  .area-bar-outer { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .area-bar-inner { height: 100%; border-radius: 3px; background: var(--accent); }
+  .area-frac { color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+  /* INTRO */
+  #intro-screen {
+    max-width: 760px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .intro-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-bottom: 32px;
+    text-align: left;
+  }
+  @media (max-width: 480px) { .intro-grid { grid-template-columns: 1fr; } }
+  .intro-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+  .intro-card-icon { font-size: 22px; margin-bottom: 8px; }
+  .intro-card-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .intro-card-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  #quiz-section { display: none; }
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="intro-screen">
+  <div class="header">
+    <div class="header-badge">Filozofski fakultet · Psihologija</div>
+    <h1>Test znanja iz psihologije</h1>
+    <p>Priprema za prijemni ispit — 60 pitanja iz svih oblasti programa. Simulacija pravog testa.</p>
+  </div>
+
+  <div class="intro-grid">
+    <div class="intro-card">
+      <div class="intro-card-icon">📝</div>
+      <div class="intro-card-title">60 pitanja</div>
+      <div class="intro-card-desc">Iz svih 17 tematskih oblasti koje se polažu na prijemnom ispitu.</div>
+    </div>
+    <div class="intro-card">
+      <div class="intro-card-icon">⏱️</div>
+      <div class="intro-card-title">45 minuta</div>
+      <div class="intro-card-desc">Kao na pravom ispitu — oko 45 sekundi po pitanju. Prati vreme!</div>
+    </div>
+    <div class="intro-card">
+      <div class="intro-card-icon">✅</div>
+      <div class="intro-card-title">Odmah objašnjenje</div>
+      <div class="intro-card-desc">Posle svakog odgovora vidiš tačno rešenje i kratko objašnjenje.</div>
+    </div>
+    <div class="intro-card">
+      <div class="intro-card-icon">📊</div>
+      <div class="intro-card-title">Analiza po oblastima</div>
+      <div class="intro-card-desc">Na kraju vidiš koje oblasti vladaš a gde treba još da učiš.</div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="startQuiz()" style="font-size:16px; padding:16px 40px;">
+    Započni test →
+  </button>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz-section">
+  <div class="header" style="margin-bottom:24px;">
+    <div class="header-badge">Filozofski fakultet · Psihologija</div>
+    <h1>Test znanja iz psihologije</h1>
+  </div>
+
+  <div class="timer-wrap">
+    <div class="timer-bar-outer"><div class="timer-bar-inner" id="timer-bar"></div></div>
+    <div class="timer-text" id="timer-text">45:00</div>
+  </div>
+
+  <div class="progress-wrap">
+    <span class="progress-label" id="progress-label">Pitanje 1/60</span>
+    <div class="progress-dots" id="progress-dots"></div>
+  </div>
+
+  <div class="q-container" id="q-container"></div>
+
+  <div class="nav-wrap">
+    <button class="btn btn-secondary" id="btn-prev" onclick="navigate(-1)">← Prethodno</button>
+    <button class="btn btn-primary"   id="btn-next" onclick="navigate(1)">Sledeće →</button>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="result-screen">
+  <div class="result-emoji" id="result-emoji">🎉</div>
+  <div class="result-title" id="result-title">Odličan rezultat!</div>
+  <div class="result-subtitle" id="result-subtitle">Evo tvoja detaljna analiza testa</div>
+
+  <div class="result-score-big" id="result-score-big"></div>
+  <div class="result-score-label" id="result-score-label"></div>
+
+  <div class="result-grid">
+    <div class="result-card">
+      <div class="result-card-label">Tačno</div>
+      <div class="result-card-val green" id="r-correct"></div>
+    </div>
+    <div class="result-card">
+      <div class="result-card-label">Netačno</div>
+      <div class="result-card-val red" id="r-wrong"></div>
+    </div>
+    <div class="result-card">
+      <div class="result-card-label">Preskočeno</div>
+      <div class="result-card-val blue" id="r-skip"></div>
+    </div>
+    <div class="result-card">
+      <div class="result-card-label">Vreme</div>
+      <div class="result-card-val blue" id="r-time"></div>
+    </div>
+  </div>
+
+  <div class="area-breakdown">
+    <h3>Rezultati po oblastima</h3>
+    <div id="area-rows"></div>
+  </div>
+
+  <button class="btn btn-primary" onclick="location.reload()" style="font-size:15px; padding:14px 36px;">
+    Ponovi test
+  </button>
+</div>
+
+<script>
+const questions = [
+  // 1. PREDMET PSIHOLOGIJE
+  { area:"Predmet psihologije", q:"Psihologija kao nauka proučava:", opts:["ponašanje i mentalne procese","fizičke promene u organizmu","sociološke zakonitosti u grupama","filozofske temelje etike","morfologiju nervnog sistema"], ans:0, exp:"Psihologija je nauka o ponašanju i mentalnim procesima — proučava šta radimo i šta se dešava u umu." },
+  { area:"Predmet psihologije", q:"Ko se smatra osnivačem eksperimentalne psihologije kao nauke?", opts:["Sigmund Frojd","Vilijam Džejms","Vilhelm Vundt","Ivan Pavlov","Žan Pijaže"], ans:2, exp:"Vilhelm Vundt je 1879. u Lajpcigu otvorio prvi psihološki laboratorij i time utemeljio psihologiju kao empirijsku nauku." },
+  { area:"Predmet psihologije", q:"Koji psihološki pravac tvrdi da je predmet psihologije isključivo ponašanje koje se može posmatrati?", opts:["Psihoanaliza","Humanistička psihologija","Bihejviorizam","Gestalt psihologija","Kognitivna psihologija"], ans:2, exp:"Bihejviorizam (Watson, Skinner) odbacuje proučavanje uma — jedini predmet su merljivo i opservabilno ponašanje." },
+  { area:"Predmet psihologije", q:"Introspektivna metoda u psihologiji podrazumeva:", opts:["posmatranje tuđeg ponašanja","posmatranje sopstvenih mentalnih stanja","merenje reakcionog vremena","analizu sna","anketu o stavovima"], ans:1, exp:"Introspekcija je metoda izveštavanja o sopstvenim doživljajima i mentalnim stanjima iznutra." },
+
+  // 2. ISTRAŽIVANJA U PSIHOLOGIJI
+  { area:"Istraživanja u psihologiji", q:"Nezavisna promenljiva u eksperimentu je:", opts:["ona koju merač slučajno promeni","ona koja se meri kao ishod","ona kojom istraživač manipuliše","prosek svih merenja","kontrolna varijabla"], ans:2, exp:"Nezavisna promenljiva (NP) je ono što istraživač namerno menja kako bi video efekat na zavisnu promenljivu." },
+  { area:"Istraživanja u psihologiji", q:"Korelacija od -0.85 između dve varijable znači:", opts:["slabu pozitivnu vezu","jaku negativnu vezu","odsustvo veze","kauzalnu vezu","slabu negativnu vezu"], ans:1, exp:"Korelacija -0.85 je blizu -1, što znači jaku negativnu vezu: kada jedna varijabla raste, druga sistematski pada." },
+  { area:"Istraživanja u psihologiji", q:"Placebo efekat nastaje kada:", opts:["ispitanik dobije pravu supstancu","istraživač greši u merenju","ispitanik veruje da prima tretman iako ga ne prima","se eksperiment ponovi više puta","se koriste dve kontrolne grupe"], ans:2, exp:"Placebo efekat je poboljšanje stanja zbog verovanja u tretman, čak i kad je tretman neaktivan (placebo)." },
+  { area:"Istraživanja u psihologiji", q:"Dvostruko slepa studija znači da:", opts:["ni ispitanici ni istraživači koji mere efekat ne znaju ko prima pravi tretman","ispitanici ne vide pitanja","istraživač je zatvoren za vreme eksperimenta","ni ispitanici ni istraživači ne pristaju na studiju","u studiji ne postoje kontrolne grupe"], ans:0, exp:"U dvostruko slepoj studiji ni ispitanici ni onaj ko meri ishode ne znaju ko je u kojoj grupi — čime se uklanjaju pristranosti." },
+
+  // 3. PSIHIČKI ŽIVOT: ELEMENTI, ORGANSKI ASPEKTI, RAZVOJ
+  { area:"Psihički razvoj", q:"Koji deo mozga je najvažniji za regulaciju emocija i pamćenja?", opts:["mali mozak","čeoni režanj","amigdala i hipokampus","korpus kalozum","moždano stablo"], ans:2, exp:"Amigdala je ključna za obradu emocija (posebno straha), a hipokampus za formiranje novih pamćenja." },
+  { area:"Psihički razvoj", q:"Neurotransmiteri su:", opts:["hormoni koje luči štitna žlezda","hemijski glasnici koji prenose signal između neurona","električni impulsi u mišićima","proteini u krvi","enzimi u jetrima"], ans:1, exp:"Neurotransmiteri su hemijske supstance (npr. serotonin, dopamin) koje prenose signale kroz sinaptičku pukotinu između neurona." },
+  { area:"Psihički razvoj", q:"Prema Pijažeovoj teoriji, dete u stadijumu formalnih operacija (od oko 12 godina) može:", opts:["samo oponašati roditelje","rešavati konkretne probleme rukovanjem predmetima","apstraktno razmišljati i postavljati hipoteze","jedino koristiti simboličku igru","prepoznati objekte bez dodira"], ans:2, exp:"Stadijum formalnih operacija karakteriše sposobnost apstraktnog i hipotetičko-deduktivnog mišljenja, bez potrebe za konkretnim predmetima." },
+  { area:"Psihički razvoj", q:"Kritični periodi u razvoju su:", opts:["periodi kada dete mora spavati više od 10 sati","vremenski prozori posebno osetljivi za određene razvojne procese","periodi bolesti u kojima se organizam najbrže oporavlja","faze puberteta kod dečaka","periodi koje Erikson naziva krizama"], ans:1, exp:"Kritični (senzitivni) periodi su faze razvoja u kojima su organizmi posebno osetljivi za usvajanje određenih veština (npr. jezik, binokularni vid)." },
+
+  // 4. MOTIVACIJA
+  { area:"Motivacija", q:"Maslova hijerarhija potreba navodi, od najosnovnijih ka višim:", opts:["sigurnost, fiziološke, ljubav, poštovanje, samoaktualizacija","fiziološke, sigurnost, ljubav, poštovanje, samoaktualizacija","samoaktualizacija, poštovanje, ljubav, sigurnost, fiziološke","ljubav, fiziološke, sigurnost, samoaktualizacija, poštovanje","poštovanje, ljubav, sigurnost, fiziološke, samoaktualizacija"], ans:1, exp:"Maslov je postavio piramidu: 1. fiziološke (hrana, voda), 2. sigurnost, 3. ljubav/pripadanje, 4. poštovanje, 5. samoaktualizacija." },
+  { area:"Motivacija", q:"Unutrašnja (intrinzična) motivacija znači da je neko motivisan:", opts:["nagradom ili kaznom spolja","prirodnim instinktima preživljavanja","samim zadatkom i ličnim zadovoljstvom","socijalnim pritiskom vršnjaka","strahom od neuspeha"], ans:1, exp:"Intrinzična motivacija dolazi iznutra — osoba radi nešto jer joj je to samo po sebi zanimljivo i ispunjavajuće, bez spoljašnjih nagrada." },
+  { area:"Motivacija", q:"Homeostaza u kontekstu motivacije odnosi se na:", opts:["stanje ravnoteže unutar organizma","maksimalnu aktivaciju nervnog sistema","rivalstvo između dva motiva","odlaganje zadovoljenja potrebe","prestanak svih motiva"], ans:0, exp:"Homeostaza je tendencija organizma da održi unutrašnju ravnotežu (npr. temperatura tela, nivo šećera) — poremećaj homeostate aktivira odgovarajuću motivaciju." },
+  { area:"Motivacija", q:"Koja teorija tvrdi da je nivo uzbuđenja (arousal) optimalan za najbolje izvođenje?", opts:["Maslovljeva hijerarhija","Jerkson-Dodsov zakon (obrnuta U-kriva)","Teorija kognitivne disonance","Atribucionalna teorija","Drive-reduction teorija"], ans:1, exp:"Jerkson-Dodsov zakon kaže da postoji optimalan nivo uzbuđenja za efikasnost — ni premalo ni previše." },
+
+  // 5. EMOCIJE
+  { area:"Emocije", q:"Džejms-Langeova teorija emocija tvrdi da:", opts:["fiziološka reakcija prethodi doživljaju emocije","kognitivna procena određuje emociju","emocije su urođene i kulturno universalne","korteks direktno generiše emocije","emocije i fiziološke reakcije nastaju istovremeno"], ans:0, exp:"Džejms i Lange tvrdili su da najpre opazimo fiziološku promenu (ubrzano srce) a zatim to interpretiramo kao emociju ('bojim se jer drhtim')." },
+  { area:"Emocije", q:"Pol Ekman je istraživanjima pokazao da su određene emocije:", opts:["isključivo kulturno određene","universalne i prepoznatljive u svim kulturama","produkt socijalizacije u prvih pet godina","vezane za određenu hemisferu mozga","specifične samo za primitivne kulture"], ans:1, exp:"Ekman je identifikovao 6 bazičnih emocija (sreća, tuga, strah, gađenje, bes, iznenađenje) čiji se izrazi lica prepoznaju globalno, bez obzira na kulturu." },
+  { area:"Emocije", q:"Kognitivna teorija emocija (Lazarus) naglašava da emocija zavisi od:", opts:["intenziteta fiziološke reakcije","procene (appraisal) situacije","genetske predispozicije","instinktivnog odgovora","jačine stimulusa"], ans:1, exp:"Lazarusova teorija kaže: najpre dolazi kognitivna procena (je li situacija pretnja?), a tek onda nastaje emocija." },
+  { area:"Emocije", q:"Koje su primarne emocije prema Plutčikovoj točki emocija?", opts:["sreća, bol, čežnja, nostalgija","radost, poverenje, strah, iznenađenje, tuga, gađenje, bes, iščekivanje","ljubav, sreća, strah, tuga","mir, uzbuđenje, bol, radost","empatija, krivica, sram, ponos"], ans:1, exp:"Robert Plutčik predložio je 8 primarnih emocija: radost, poverenje, strah, iznenađenje, tuga, gađenje, bes i iščekivanje." },
+
+  // 6. OPAŽANJE
+  { area:"Opažanje", q:"Geštalt princip figure i pozadine govori da:", opts:["objekat uvek percipiramo odvojeno od okoline","percepija zavisi od boje","mozak organizuje elemente u smislene celine razlikujući figuru od podloge","svi vidni elementi imaju isti značaj","ne možemo percipirati ambivalentne slike"], ans:2, exp:"Gestalt princip figure i pozadine: mozak automatski odvaja figure (objekte od interesa) od pozadine — pri čemu isti stimulus može biti i jedno i drugo." },
+  { area:"Opažanje", q:"Perceptivna konstantnost oblika znači:", opts:["objekat menjamo zavisno od ugla gledanja","objekat percipiramo kao isti oblik bez obzira na ugao posmatranja","boja objekta ostaje ista bez obzira na osvetljenje","zvuk percipiramo jednako bez obzira na razdaljinu","predmeti deluju veći u mraku"], ans:1, exp:"Konstantnost oblika: prozor vidimo kao pravougaonik čak i kad ga posmatramo pod uglom (slika na mrežnjači nije pravougaona)." },
+  { area:"Opažanje", q:"Dubinska percepcija monokularne distance uključuje:", opts:["binokularne disparitete","samo pokrete oka","linearne perspektive, preklapanje, smanjenje veličine, teksturni gradijent","isključivo ugao konvergencije očiju","jedino boju objekata"], ans:2, exp:"Monokularne ključeve dubine (koji funkcionišu i s jednim okom) uključuju: linearnu perspektivu, preklapanje, relativnu veličinu, teksturni gradijent itd." },
+  { area:"Opažanje", q:"Weberov zakon kaže da je prag razlike (JND):", opts:["uvek ista apsolutna vrednost","proporcionalan intenzitetu stimulusa","obrnuto proporcionalan intenzitetu stimulusa","nezavisan od intenziteta stimulusa","određen emocionalnim stanjem"], ans:1, exp:"Weberov zakon: JND (just noticeable difference) je konstantna proporcija referentnog stimulusa — veći stimulus zahteva veću promenu da bi promena bila primećena." },
+
+  // 7. PAMĆENJE
+  { area:"Pamćenje", q:"Koji model pamćenja razlikuje senzorni registar, kratkoročno pamćenje (KRP) i dugoročno pamćenje (DRP)?", opts:["Teorija nivoa obrade","Atkinson-Shiffrin model","Tulvingov model","Baddeley-Hitch model","Freudov model"], ans:1, exp:"Atkinson i Shiffrin (1968) predložili su modalni model: senzorni registar → kratkoročno → dugoročno pamćenje." },
+  { area:"Pamćenje", q:"Radna memorija (working memory) prema Baddeliju sadrži:", opts:["samo fonološku petlju","centralni izvršni sistem, fonološku petlju i vizuospacijalni notes","senzorni registar i epizodičko pamćenje","samo vizuospacijalni notes","isključivo proceduralnu memoriju"], ans:1, exp:"Baddleyev model radne memorije ima tri komponente: centralni izvršni sistem (pažnja/kontrola), fonološku petlju (verbalni info) i vizuospacijalni notes (slike/prostor)." },
+  { area:"Pamćenje", q:"Proaktivna interferencija nastaje kada:", opts:["novo učenje ometa pamćenje starog","staro znanje ometa pamćenje novog","emocionalna uzbuđenost briše pamćenja","spavanje konsoliduje pamćenja","informacije nisu dobro kodirane"], ans:1, exp:"Proaktivna interferencija: stare informacije 'ometaju' pamćenje novih (suprotno od retroaktivne, gde nova znanja remete stara)." },
+  { area:"Pamćenje", q:"Elizabet Loftus je poznata po istraživanjima koja pokazuju da:", opts:["pamćenje je savršeno pouzdan snimak prošlosti","lažna sećanja se mogu sugešijom implantirati","IQ direktno određuje kapacitet pamćenja","dugoročno pamćenje je neograničeno","stres uvek poboljšava pamćenje"], ans:1, exp:"Loftus je dokazala da svedočenja mogu biti nepouzdana jer se lažna sećanja relativno lako formiraju — sugestijama, dezinformacijama i vodećim pitanjima." },
+
+  // 8. MIŠLJENJE
+  { area:"Mišljenje", q:"Heuristika u mišljenju je:", opts:["algoritam koji garantuje tačan odgovor","mentalna prečica koja se obično pokazuje korisnom","formalna logička procedura","skup aksioma iz matematike","strategija koja se nikad ne koristi u svakodnevnom životu"], ans:1, exp:"Heuristike su mentalne prečice — brzo donose odluku/procenu, ali ponekad vode do sistematičnih grešaka (kognitivnih pristranosti)." },
+  { area:"Mišljenje", q:"Potvrđivačka pristranost (confirmation bias) znači sklonost da:", opts:["tražimo informacije koje potvrđuju naša uverenja","uvek biramo statističke podatke","prihvatamo sve informacije jednako","prepričavamo informacije u suprotnom redosledu","procenjujemo verovatnoću na osnovu dostupnosti"], ans:0, exp:"Confirmation bias: selektivno tražimo, interpretiramo i pamtimo informacije koje potvrđuju ono u šta već verujemo." },
+  { area:"Mišljenje", q:"Funkcionalna fiksiranost je:", opts:["nesposobnost da se reši geometrijski problem","teškoća u korišćenju predmeta na nekonvencionalan način pri rešavanju problema","vrsta mentalne retardacije","oštećenje funkcije memorije","poremećaj koji nastaje posle povrede mozga"], ans:1, exp:"Funkcionalna fiksiranost: psihološka blokada koja nas sprečava da predmet koristimo na novi/kreativni način jer smo navikli na njegovu standardnu funkciju." },
+  { area:"Mišljenje", q:"Induktivno rezonovanje ide od:", opts:["opšteg ka posebnom","posebnih slučajeva ka opštem zaključku","hipoteze ka eksperimentu","emocije ka kogniciji","simptoma ka dijagnozi"], ans:1, exp:"Indukcija: iz niza specifičnih zapažanja izvodimo opšte zaključke (npr. 'svi labudovi koje sam video su beli → svi labudovi su beli')." },
+
+  // 9. UČENJE
+  { area:"Učenje", q:"Klasično uslovljavanje (Pavlov) zasniva se na:", opts:["nagradi za željeno ponašanje","udruživanju neutralnog stimulusa sa bezuslovnim stimulusom","kažnjavanju neželjenog ponašanja","posmatranju tuđeg ponašanja","kognitinom prestrukturisanju"], ans:1, exp:"Pavlov: neutralni stimulus (zvono) sparen s bezuslovnim stimulusom (hrana) → na kraju zvono samo po sebi izaziva odgovor (lučenje pljuvačke)." },
+  { area:"Učenje", q:"Operantno uslovljavanje (Skinner) razlikuje pozitivno pojačanje od negativnog pojačanja. Negativno pojačanje znači:", opts:["kažnjavanje neželjenog ponašanja","povećanje verovatnoće ponašanja uklanjanjem neprijatnog stimulusa","smanjenje verovatnoće ponašanja","ignorisanje ponašanja","primenu averzivnog stimulusa"], ans:1, exp:"Negativno pojačanje ≠ kazna! Ono POVEĆAVA verovatnoću ponašanja tako što UKLANJA nešto neprijatno (npr. uzmete aspirin → nestane glavobolja → češće uzimate aspirin)." },
+  { area:"Učenje", q:"Bandurina teorija socijalnog učenja naglašava:", opts:["isključivo genetske faktore","učenje posmatranjem (observational learning/modeling)","klasično uslovljavanje kao jedini mehanizam","nesvesne procese u učenju","učenje samo kroz neposredno iskustvo"], ans:1, exp:"Albert Bandura: učimo posmatrajući druge (modelovanje). Eksperiment s Bobo lutkom pokazao je da deca imitiraju agresivne obrasce ponašanja koje su videla." },
+  { area:"Učenje", q:"Raspored pojačavanja koji najotpornije na gašenje čini naučeno ponašanje je:", opts:["fiksni interval","fiksni odnos","promenljivi interval","promenljivi odnos","kontinuirano pojačanje"], ans:3, exp:"Promenljivi odnos (variable ratio) — npr. slot machine — najtrajnija je otpornost na gašenje jer je nagrada nepredvidiva, što održava ponašanje." },
+
+  // 10. INTELIGENCIJA
+  { area:"Inteligencija", q:"Koeficijent inteligencije (IQ) se originalno računao kao:", opts:["(hronološka starost / mentalna starost) × 100","(mentalna starost / hronološka starost) × 100","zbir tačnih odgovora na testu","percentilni rang u populaciji","stepen obrazovanja × 10"], ans:1, exp:"Binet-Simon formula: IQ = (mentalna starost / hronološka starost) × 100. Prosečna vrednost je 100." },
+  { area:"Inteligencija", q:"Howard Gardner predložio je teoriju višestrukih inteligencija. Koja od sledećih NIJE jedna od Gardnerovih inteligencija?", opts:["muzička","telesno-kinestetička","emocionalna","interpersonalna","naturalistička"], ans:2, exp:"Gardner nije uvrstio emocionalnu inteligenciju u svoju teoriju. Tu koncept potiče od Saloveya i Mayera. Gardner je predložio: lingvističku, logičko-matematičku, muzičku, prostornu, telesno-kinestetičku, interpersonalnu, intrapersonalnu i naturalističku." },
+  { area:"Inteligencija", q:"Fluidna inteligencija (Cattell) odnosi se na:", opts:["akumulirano znanje i iskustvo","sposobnost logičkog razmišljanja u novim situacijama bez oslanjanja na iskustvo","emocionalnu regulaciju","kreativnost i umetničko izražavanje","brzinu čitanja i pisanja"], ans:1, exp:"Fluidna inteligencija (Gf): kapacitet za razmišljanje, brzo rešavanje novih problema bez oslanjanja na ranije stečeno znanje — opada sa starenjem." },
+
+  // 11. LIČNOST
+  { area:"Ličnost", q:"Big Five (OCEAN) model ličnosti uključuje:", opts:["otvorenost, savesnost, ekstraverziju, saglasljivost, neuroticizam","dominantnost, savesnost, stabilnost, otvorenost, ljubaznost","optimizam, kreativnost, empatiju, asertivnost, narcisoidnost","introvertnost, osetljivost, logičnost, perceptivnost, racionalnost","ambicioznost, neuroticizam, otvorenost, savesnost, kreativnost"], ans:0, exp:"Big Five (OCEAN): Openness to experience, Conscientiousness, Extraversion, Agreeableness, Neuroticism — pet najreplikovanijih faktora ličnosti." },
+  { area:"Ličnost", q:"Frojdov model ličnosti deli psihu na:", opts:["svesno i nesvesno","id, ego i superego","animus, anima i senka","persona, ego i self","libido, eros i tanatos"], ans:1, exp:"Frojd: id (instinktivni impulsi, princip zadovoljstva), ego (realnost, posrednik) i superego (moralne norme, savest)." },
+  { area:"Ličnost", q:"Humanistički pristup ličnosti (Rogers, Maslov) naglašava:", opts:["nesvesne sukobe iz ranog detinjstva","urođene instinkte preživljavanja","slobodnu volju, samoaktualizaciju i subjektivno iskustvo","ponašanje oblikovano isključivo spoljašnjim potkrepljenjima","biohemijsku osnovu ličnosti"], ans:2, exp:"Humanistički psiholozi (Rogers, Maslov) veruju u pozitivni potencijal čoveka, slobodnu volju i tendenciju ka rastu i samoaktualizaciji." },
+  { area:"Ličnost", q:"Ajzenkov model ličnosti bazira se na dimenzijama:", opts:["ekstraverzija–introverzija, neuroticizam–stabilnost (i psihoticizam)","otvorenost i savesnost","dominantnost i submisivnost","optimizam i pesimizam","narcisoidnost i empatičnost"], ans:0, exp:"Hans Eysenck predložio je dimenzije: ekstraverzija–introverzija, neuroticizam–emocionalna stabilnost, a kasnije i psihoticizam." },
+
+  // 12. MENTALNO ZDRAVLJE
+  { area:"Mentalno zdravlje", q:"DSM (Dijagnostički i statistički priručnik) koristi se za:", opts:["testiranje inteligencije","merenje stresa na poslu","klasifikaciju i dijagnostiku psihičkih poremećaja","procenu kognitivnih sposobnosti starih osoba","statistiku zaposlenosti psihologa"], ans:2, exp:"DSM (Diagnostic and Statistical Manual of Mental Disorders, APA) je standardni referentni priručnik za dijagnozu mentalnih poremećaja." },
+  { area:"Mentalno zdravlje", q:"Anksiozni poremećaji zajednički su po:", opts:["epizodama maničnog raspoloženja","prekomernom strahu ili brizi koji ometaju funkcionisanje","halucinacijama i delirijumom","nedostatku empatije","impulzivnoj agresiji"], ans:1, exp:"Anksiozni poremećaji (generalizovana anksioznost, fobije, panic disorder, OCD, PTSP) karakteriše prekomerni, neproporcionalni strah ili zabrinutost." },
+  { area:"Mentalno zdravlje", q:"Kognitivno-bihejvioralna terapija (KBT) se zasniva na pretpostavci da:", opts:["nesvesni sukobi uzrokuju sve poremećaje","lekovito deluje isključivo farmakoterapija","misli, emocije i ponašanje su međusobno povezani i mogu se menjati","samo dečija trauma uzrokuje odrasle poremećaje","ličnost je fiksirana i ne može se promeniti"], ans:2, exp:"KBT: disfunkcionalne automatske misli → negativne emocije → problematično ponašanje. Menjanjem misaonih obrazaca menja se i emocionalno stanje i ponašanje." },
+
+  // 13. SOCIJALIZACIJA
+  { area:"Socijalizacija", q:"Primarna socijalizacija odvija se:", opts:["u školi i medijima","uglavnom u porodici tokom ranog detinjstva","na radnom mestu","kroz zakonodavni sistem","u vrtitoma i udruženjima"], ans:1, exp:"Primarna socijalizacija odvija se u porodici u ranom detinjstvu — tada se usvajaju temeljne norme, vrednosti i jezik." },
+  { area:"Socijalizacija", q:"Eriksonova teorija psihosocijalnog razvoja predlaže koliko razvojnih stadijuma?", opts:["4","5","6","8","10"], ans:3, exp:"Erik Erikson opisao je 8 stadijuma psihosocijalnog razvoja, od povjerenje vs. nepovjerenje u dojenačkom dobu do integritet vs. očaj u starosti." },
+  { area:"Socijalizacija", q:"Pojam 'referentna grupa' odnosi se na:", opts:["grupu kojoj osoba nužno pripada","eksperimentalnu kontrolnu grupu","grupu čijim se normama i vrednostima osoba poredila i uređuje vlastito ponašanje","grupu koja ne prihvata novog člana","istraživačku uzornu grupu"], ans:2, exp:"Referentna grupa: grupa kojoj osoba ne mora nužno da pripada, ali čije norme i vrednosti koristi kao orijentir za procenu sebe i svog ponašanja." },
+
+  // 14. KOMUNIKACIJA
+  { area:"Komunikacija", q:"Neverbalna komunikacija obuhvata:", opts:["pismene poruke i pisma","govor, akcenat i ton","mimiku, gestikulaciju, telesno držanje i kontakt očima","grafiku i slike u tekstu","samo tišinu i odsustvo govora"], ans:2, exp:"Neverbalna komunikacija: mimika lica, gestovi, položaj tela, kontakt pogledom, proksemika (distanca), vokalni znaci (ton, pauze) — bez reči." },
+  { area:"Komunikacija", q:"Aktivno slušanje podrazumeva:", opts:["čekanje da sagovornik završi rečenicu kako bih odgovorio","puno pripovedanje o sopstvenom iskustvu","reflektovanje, postavljanje pitanja, parafraziranje i empatijsko reagovanje","isključivo klimanje glavom","zapisivanje svega što sagovornik kaže"], ans:2, exp:"Aktivno slušanje: potpuna prisutnost, parafraziranje, postavljanje pitanja, reflektovanje emocija — pokazuje razumevanje i podstiče sagovornika." },
+  { area:"Komunikacija", q:"Efekat 'šuma' u komunikacijskom modelu (Shannon-Weaver) odnosi se na:", opts:["buku okoline koja fizički ometa komunikaciju","bilo koji faktor koji ometa tačan prenos poruke od pošiljaoca do primaoca","nepreciznost pošiljaočevog govornog aparata","lošu gramatiku u poruci","izostanak povratne informacije"], ans:1, exp:"'Šum' u komunikacionoj teoriji je svaki faktor koji iskrivljuje poruku — fizički (buka), semantički (nerazumevanje reči) ili psihološki (predrasude)." },
+
+  // 15. OPAŽANJE OSOBA I MEĐULJUDSKI ODNOSI
+  { area:"Opažanje osoba i međuljudski odnosi", q:"Efekat halo (halo effect) u percepciji osoba znači:", opts:["precenjivanje osoba koje su visoke","sklonost da jedna pozitivna (ili negativna) osobina utiče na opštu procenu osobe","davanjem posebnog tretmana svetlokosim osobama","grešku u pamćenju ličnih podataka","pristrasnost u korist svog naroda"], ans:1, exp:"Halo efekat: jedna istaknuta osobina (npr. fizička privlačnost) 'boji' celokupan utisak o osobi — percipiramo je kao inteligentniju, ljubazniju, uspešniju." },
+  { area:"Opažanje osoba i međuljudski odnosi", q:"Fundamentalna atribucijska greška je:", opts:["precenjivanje situacionih faktora i potcenjivanje dispozicionih pri objašnjenju tuđeg ponašanja","precenjivanje dispozicionih (ličnih) i potcenjivanje situacionih faktora pri objašnjenju tuđeg ponašanja","tačno pripisivanje uzroka ponašanja","greška u merenju ličnosti upitnicima","sklonost da sebi pripisujemo uspehe a drugima neuspehe"], ans:1, exp:"Fundamentalna atribucijska greška: precenjujemo koliko je tuđe ponašanje produkt njihovog karaktera, a potcenjujemo uticaj situacije." },
+  { area:"Opažanje osoba i međuljudski odnosi", q:"Teorija privrženosti (Bowlby, Ainsworth) razlikuje koji stilovi privrženosti u ranom detinjstvu?", opts:["sigurna, izbegavajuća, ambivalentna (anksiozna), dezorganizovana","dominantna i submisivna","aktivna i pasivna","otvorena i zatvorena","ekstravertna i introvertna"], ans:0, exp:"Mary Ainsworth identifikovala je tri stila (sigurna, izbegavajuća, ambivalentna), a Main i Solomon dodali dezorganizovanu — na osnovu reakcije deteta na Stranger Situation." },
+
+  // 16. STAVOVI, INTERESOVANJA I VREDNOSTI
+  { area:"Stavovi, interesovanja i vrednosti", q:"Stav se sastoji od tri komponente (trijadni model). To su:", opts:["kognitivna, afektivna i bihejvioralna","genetska, fiziološka i socijalna","svesna, predsvesna i nesvesna","semantička, sintaktička i pragmatička","implicitna, eksplicitna i latentna"], ans:0, exp:"Trijadni (ABC) model stava: A = Affective (emocionalna komponenta), B = Behavioral (ponašajna), C = Cognitive (misaona/uverenja)." },
+  { area:"Stavovi, interesovanja i vrednosti", q:"Teorija kognitivne disonance (Festinger) tvrdi da kada postoje nekonzistentna uverenja ili ponašanja:", opts:["ih osoba mirno prihvata","javlja se psihička nelagoda koja motiviše na promenu","ne dolazi do nikakve reakcije","osoba postaje agresivna","osoba traži terapiju"], ans:1, exp:"Festinger: kognitivna disonanca = nelagoda zbog nekonzistentnih misli/ponašanja. Motiviše nas da smanjimo disonancu — racionalizacijom, promenom stava ili ponašanja." },
+  { area:"Stavovi, interesovanja i vrednosti", q:"Švalcova teorija vrednosti klasifikuje vrednosti u:", opts:["4 grupe","8 motivacionih tipova vrednosti organizovanih u krug","10 motivacionih tipova vrednosti organizovanih u krug","isključivo individualne i kolektivne","2 dimenzije: hedonizam i altruizam"], ans:2, exp:"Shalom Schwartz predložio je 10 bazičnih vrednosti (moć, postignuće, hedonizam, stimulacija, samo-usmeravanje, universalizam, benevolentnost, tradicija, konformizam, sigurnost) organizovanih kružno." },
+
+  // 17. PSIHOLOGIJA GRUPA
+  { area:"Psihologija grupa", q:"Grupno mišljenje (groupthink, Janis) nastaje kada:", opts:["svaki član grupe iznosi kritičku analizu","pritisak za konsenzusom potiskuje kritično mišljenje i dovodi do loših odluka","grupa ima previše članova","vođa stimuliše neslaganje","group ima jasno definisane uloge"], ans:1, exp:"Groupthink (Janis): kohezivna grupa toliko želi slogu i konsenzus da potiskuje neslaganje i kritičko razmišljanje → loše odluke (npr. Zaliv svinja)." },
+  { area:"Psihologija grupa", q:"Socijalna facilitacija znači:", opts:["smanjenje individualnog učinka u prisustvu grupe","povećanje učinka na dobro naučenim zadacima u prisustvu drugih","grupno donošenje loših odluka","podela rada u grupi","prestanak truda kada drugi rade"], ans:1, exp:"Socijalna facilitacija (Zajenc): prisustvo posmatrača povećava uzbuđenje → poboljšava izvedbu na dobro savladanim/prostim zadacima, ali otežava složene." },
+  { area:"Psihologija grupa", q:"Milgramov eksperiment poslušnosti pokazao je da:", opts:["većina ljudi odbija da sledi naređenja autoriteta","oko 65% ispitanika poslušalo je autoriteta do krajnjeg nivoa šoka","samo agresivni tipovi slede naređenja","grupna podrška nema uticaja na poslušnost","stres uvek smanjuje poslušnost"], ans:1, exp:"Milgram (1963): oko 65% ispitanika pritisnulo je dugme maksimalnog napona (450V) na nalog eksperimentatora — demonstriralo snagu situacionih faktora nad ličnim moralom." },
+  { area:"Psihologija grupa", q:"Socijalnom lenčarenjem (social loafing) naziva se:", opts:["pomaganje slabijim članovima grupe","smanjenje individualnog napora kada radimo u grupi","rivalstvo između dve grupe","tendencija ka ekstremnim odlukama u grupi","fenomen eha u socijalnim medijima"], ans:0, exp:"Socijalno lenčarenje (Latané): individue ulažu manje napora u grupnom zadatku nego kad rade sami — jer se odgovornost rasplinjuje na celu grupu." },
+];
+
+let current = 0;
+let answers = new Array(questions.length).fill(null);
+let timer;
+let timeLeft = 45 * 60;
+let startTime;
+
+function startQuiz() {
+  document.getElementById('intro-screen').style.display = 'none';
+  document.getElementById('quiz-section').style.display = 'block';
+  buildDots();
+  renderQuestion(0);
+  startTimer();
+  startTime = Date.now();
+}
+
+function buildDots() {
+  const wrap = document.getElementById('progress-dots');
+  wrap.innerHTML = '';
+  questions.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' current' : '');
+    d.id = 'dot-' + i;
+    wrap.appendChild(d);
+  });
+}
+
+function updateDots() {
+  questions.forEach((_, i) => {
+    const d = document.getElementById('dot-' + i);
+    d.className = 'dot';
+    if (answers[i] !== null) d.classList.add('answered');
+    if (i === current) d.classList.add('current');
+  });
+}
+
+function renderQuestion(idx) {
+  const container = document.getElementById('q-container');
+  container.innerHTML = '';
+  const q = questions[idx];
+  const letters = ['A','B','C','D','E'];
+
+  const card = document.createElement('div');
+  card.className = 'q-card active';
+
+  const answered = answers[idx] !== null;
+
+  card.innerHTML = `
+    <div class="q-meta">
+      <span class="q-num">PITANJE ${idx + 1} / ${questions.length}</span>
+      <span class="q-tag">${q.area}</span>
+    </div>
+    <div class="q-text">${q.q}</div>
+    <div class="options">
+      ${q.opts.map((o, i) => {
+        let cls = 'option';
+        if (answered) {
+          cls += ' locked';
+          if (i === q.ans) cls += ' correct';
+          else if (i === answers[idx]) cls += ' wrong';
+        } else if (answers[idx] === i) cls += ' selected';
+        return `<div class="${cls}" onclick="${answered ? '' : `selectAnswer(${idx}, ${i})`}">
+          <span class="opt-letter">${letters[i]}</span>
+          <span>${o}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="explanation ${answered ? 'show' : ''}" id="exp-${idx}">
+      <strong>Tačan odgovor: ${letters[q.ans]}. ${q.opts[q.ans]}</strong><br>${q.exp}
+    </div>`;
+
+  container.appendChild(card);
+  document.getElementById('progress-label').textContent = `Pitanje ${idx + 1}/${questions.length}`;
+  document.getElementById('btn-prev').disabled = idx === 0;
+  document.getElementById('btn-next').textContent = idx === questions.length - 1 ? 'Završi test ✓' : 'Sledeće →';
+  updateDots();
+}
+
+function selectAnswer(idx, optIdx) {
+  answers[idx] = optIdx;
+  renderQuestion(idx);
+}
+
+function navigate(dir) {
+  const next = current + dir;
+  if (next < 0) return;
+  if (next >= questions.length) { finishQuiz(); return; }
+  current = next;
+  renderQuestion(current);
+}
+
+function startTimer() {
+  updateTimerDisplay();
+  timer = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if (timeLeft <= 0) { clearInterval(timer); finishQuiz(); }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timeLeft / 60);
+  const s = timeLeft % 60;
+  const pct = (timeLeft / (45 * 60)) * 100;
+  const bar = document.getElementById('timer-bar');
+  const txt = document.getElementById('timer-text');
+  bar.style.width = pct + '%';
+  txt.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  if (timeLeft < 300) { bar.className = 'timer-bar-inner danger'; txt.className = 'timer-text danger'; }
+  else if (timeLeft < 600) { bar.className = 'timer-bar-inner warning'; txt.className = 'timer-text warning'; }
+}
+
+function finishQuiz() {
+  clearInterval(timer);
+  document.getElementById('quiz-section').style.display = 'none';
+  document.getElementById('result-screen').style.display = 'block';
+
+  let correct = 0, wrong = 0, skip = 0;
+  const areaMap = {};
+
+  questions.forEach((q, i) => {
+    if (!areaMap[q.area]) areaMap[q.area] = { total: 0, correct: 0 };
+    areaMap[q.area].total++;
+    if (answers[i] === null) { skip++; }
+    else if (answers[i] === q.ans) { correct++; areaMap[q.area].correct++; }
+    else { wrong++; }
+  });
+
+  const pct = Math.round((correct / questions.length) * 100);
+  const elapsed = Math.round((Date.now() - startTime) / 1000);
+  const em = pct >= 80 ? '🎉' : pct >= 60 ? '👍' : pct >= 40 ? '📚' : '💪';
+  const title = pct >= 80 ? 'Odličan rezultat!' : pct >= 60 ? 'Dobar rezultat!' : pct >= 40 ? 'Ima još prostora za napredak' : 'Vrati se literaturi!';
+
+  document.getElementById('result-emoji').textContent = em;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-subtitle').textContent = `Rešio/la si ${questions.length} pitanja · Analiziraj rezultate po oblastima`;
+  document.getElementById('result-score-big').textContent = pct + '%';
+  document.getElementById('result-score-label').textContent = `${correct} tačnih od ${questions.length} pitanja`;
+  document.getElementById('r-correct').textContent = correct;
+  document.getElementById('r-wrong').textContent = wrong;
+  document.getElementById('r-skip').textContent = skip;
+  const em2 = Math.floor(elapsed / 60);
+  const es2 = elapsed % 60;
+  document.getElementById('r-time').textContent = `${String(em2).padStart(2,'0')}:${String(es2).padStart(2,'0')}`;
+
+  const rows = document.getElementById('area-rows');
+  rows.innerHTML = Object.entries(areaMap).map(([area, data]) => {
+    const p = Math.round((data.correct / data.total) * 100);
+    return `<div class="area-row">
+      <span class="area-name">${area}</span>
+      <div class="area-bar-outer"><div class="area-bar-inner" style="width:${p}%;background:${p>=70?'var(--correct)':p>=40?'var(--accent)':'var(--wrong)'}"></div></div>
+      <span class="area-frac">${data.correct}/${data.total}</span>
+    </div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
