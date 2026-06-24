@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo test — Psihologija · Prijemni ispit</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+
+:root {
+  --bg: #09090f;
+  --surface: #111118;
+  --card: #16161f;
+  --border: #252535;
+  --accent: #7c6af7;
+  --accent2: #a78bfa;
+  --correct: #34d399;
+  --wrong: #f87171;
+  --text: #eeeef5;
+  --muted: #6b6b8a;
+  --tag-bg: #1e1e2e;
+  --gold: #f59e0b;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ─── SPLASH ─────────────────────────────── */
+#splash {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-glow {
+  position: absolute;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,106,247,0.15) 0%, transparent 70%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -60%);
+  pointer-events: none;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(124,106,247,0.12);
+  border: 1px solid rgba(124,106,247,0.3);
+  color: var(--accent2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 20px;
+  margin-bottom: 28px;
+}
+
+.splash-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(32px, 6vw, 56px);
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, #fff 30%, var(--accent2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  max-width: 640px;
+}
+
+.splash-italic { font-family: 'Playfair Display', serif; font-style: italic; }
+
+.splash-sub {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 460px;
+  margin: 0 auto 40px;
+}
+
+.splash-pills {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+.pill {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pill span { color: var(--text); font-weight: 600; }
+
+.btn-start {
+  background: linear-gradient(135deg, var(--accent), #9333ea);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 18px 48px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 8px 32px rgba(124,106,247,0.35);
+  letter-spacing: 0.01em;
+}
+.btn-start:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(124,106,247,0.5); }
+
+.splash-note { margin-top: 16px; font-size: 12px; color: var(--muted); }
+
+/* ─── QUIZ ─────────────────────────────── */
+#quiz { display: none; max-width: 680px; margin: 0 auto; padding: 32px 20px 80px; }
+
+.quiz-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  gap: 12px;
+}
+.quiz-logo { font-size: 13px; font-weight: 700; color: var(--accent2); letter-spacing: 0.05em; }
+.timer-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 80px;
+  justify-content: center;
+  transition: color 0.3s;
+}
+.timer-pill.warn { color: #fbbf24; border-color: rgba(251,191,36,0.3); }
+.timer-pill.danger { color: var(--wrong); border-color: rgba(248,113,113,0.3); }
+
+.prog-wrap { margin-bottom: 32px; }
+.prog-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.prog-track { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 2px;
+  transition: width 0.4s cubic-bezier(.4,0,.2,1);
+}
+.dots { display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: all 0.3s; }
+.dot.done { background: var(--accent); }
+.dot.active { background: var(--accent2); transform: scale(1.4); }
+.dot.correct { background: var(--correct); }
+.dot.wrong { background: var(--wrong); }
+
+.q-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px;
+  margin-bottom: 14px;
+  animation: slideIn 0.3s cubic-bezier(.4,0,.2,1);
+}
+@keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.q-area { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent2); margin-bottom: 14px; opacity: 0.8; }
+.q-text { font-size: 17px; font-weight: 600; line-height: 1.6; color: var(--text); }
+
+.options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 0; }
+
+.opt {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #c0c0d8;
+  transition: all 0.16s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+.opt::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(124,106,247,0.06), transparent); opacity: 0; transition: opacity 0.16s; }
+.opt:hover:not(.locked)::before { opacity: 1; }
+.opt:hover:not(.locked) { border-color: var(--accent); color: var(--text); }
+.opt-let { width: 26px; height: 26px; border-radius: 7px; background: var(--border); color: var(--muted); font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.16s; }
+.opt:hover:not(.locked) .opt-let { background: var(--accent); color: #fff; }
+.opt.correct { border-color: var(--correct); background: rgba(52,211,153,0.08); color: var(--correct); }
+.opt.correct .opt-let { background: var(--correct); color: #fff; }
+.opt.wrong { border-color: var(--wrong); background: rgba(248,113,113,0.08); color: var(--wrong); }
+.opt.wrong .opt-let { background: var(--wrong); color: #fff; }
+.opt.locked { cursor: default; }
+
+.exp-box {
+  background: rgba(124,106,247,0.07);
+  border: 1px solid rgba(124,106,247,0.2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.65;
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+.exp-box.show { display: block; }
+.exp-box strong { color: var(--accent2); }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.nav { display: flex; justify-content: flex-end; margin-top: 16px; }
+.btn-next {
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 32px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(124,106,247,0.3);
+}
+.btn-next:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(124,106,247,0.45); }
+.btn-next:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+/* ─── RESULT ─────────────────────────────── */
+#result {
+  display: none;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 48px 20px 80px;
+  text-align: center;
+}
+
+.res-emoji { font-size: 60px; margin-bottom: 16px; line-height: 1; }
+.res-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(26px, 5vw, 38px);
+  font-weight: 700;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #fff 30%, var(--accent2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.res-sub { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+
+.score-ring {
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  border: 4px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 32px;
+  background: var(--card);
+}
+.score-num { font-size: 40px; font-weight: 800; color: var(--accent2); line-height: 1; }
+.score-of { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+.res-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+@media(max-width:420px) { .res-grid { grid-template-columns: 1fr; } }
+.res-stat { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+.res-stat-val { font-size: 26px; font-weight: 800; margin-bottom: 4px; }
+.res-stat-val.g { color: var(--correct); }
+.res-stat-val.r { color: var(--wrong); }
+.res-stat-val.b { color: var(--accent2); }
+.res-stat-lab { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ─── CTA BOX ─────────────────────────────── */
+.cta-box {
+  background: linear-gradient(135deg, rgba(124,106,247,0.12), rgba(124,106,247,0.04));
+  border: 1px solid rgba(124,106,247,0.3);
+  border-radius: 20px;
+  padding: 28px 24px;
+  margin-bottom: 16px;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+.cta-box::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(167,139,250,0.15), transparent 70%);
+  pointer-events: none;
+}
+.cta-promo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(245,158,11,0.15);
+  border: 1px solid rgba(245,158,11,0.35);
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+}
+.cta-box h3 {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: #fff;
+  line-height: 1.25;
+}
+.cta-box .cta-sub {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+.cta-features { display: flex; flex-direction: column; gap: 9px; margin-bottom: 22px; }
+.cta-feat { font-size: 13.5px; color: #c8c8e0; display: flex; align-items: flex-start; gap: 9px; line-height: 1.4; }
+.cta-feat-icon { color: var(--correct); font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+
+.cta-price-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.cta-price {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+}
+.cta-price-note {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.btn-cta {
+  display: block;
+  width: 100%;
+  background: linear-gradient(135deg, #7c6af7, #9333ea);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 17px 20px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 8px 28px rgba(124,106,247,0.4);
+  transition: all 0.2s;
+  text-decoration: none;
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+.btn-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(124,106,247,0.55); }
+.btn-cta-sub {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 10px;
+}
+
+.btn-retry {
+  background: var(--card);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 13px 28px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  margin-top: 8px;
+}
+.btn-retry:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Inline CTA in quiz (after last question) */
+.quiz-cta {
+  background: linear-gradient(135deg, rgba(124,106,247,0.1), rgba(124,106,247,0.03));
+  border: 1px solid rgba(124,106,247,0.25);
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 16px;
+  text-align: center;
+  display: none;
+}
+.quiz-cta.show { display: block; }
+.quiz-cta p {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 12px;
+  line-height: 1.55;
+}
+.quiz-cta p strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="bg-glow"></div>
+  <div class="badge">🧠 Besplatni demo · Priprema za prijemni ispit</div>
+  <h1 class="splash-title">Proveri koliko si spreman/na za prijemni iz <span class="splash-italic">Psihologije</span></h1>
+  <p class="splash-sub">10 pitanja koja možda mogu biti na prijemnom ispitu. Odmah rešenja. Srećno!</p>
+
+  <div class="splash-pills">
+    <div class="pill">⏱️ <span>5 minuta</span></div>
+    <div class="pill">📝 <span>10 pitanja</span></div>
+    <div class="pill">✅ <span>Odmah rešenja</span></div>
+    <div class="pill">🆓 <span>Besplatno</span></div>
+  </div>
+
+  <button class="btn-start" onclick="startQuiz()">Pokreni test →</button>
+  <p class="splash-note">Nema registracije · Nema mejla · Odmah počni</p>
+
+  <div style="margin-top:36px;padding-top:28px;border-top:1px solid rgba(255,255,255,0.07);width:100%;max-width:420px;">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:0.08em;font-weight:700;">Hoćeš svih 300 pitanja?</p>
+    <a href="https://preforma.lemonsqueezy.com/checkout/buy/fc3f46a8-8ab9-430a-b2dd-c8401d36f5cc" target="_blank"
+       style="display:block;background:linear-gradient(135deg,rgba(124,106,247,0.2),rgba(124,106,247,0.08));border:1px solid rgba(124,106,247,0.35);color:#a78bfa;border-radius:12px;padding:13px 20px;font-size:14px;font-weight:700;font-family:Inter,sans-serif;text-decoration:none;text-align:center;transition:all 0.2s;"
+       onmouseover="this.style.background='linear-gradient(135deg,rgba(124,106,247,0.35),rgba(124,106,247,0.15))'"
+       onmouseout="this.style.background='linear-gradient(135deg,rgba(124,106,247,0.2),rgba(124,106,247,0.08))'">
+      5 baterija × 60 pitanja — 9,99 $ →
+    </a>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px;">Sve 17 oblasti · Objašnjenja · Tajmer · Analiza rezultata</p>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz">
+  <div class="quiz-header">
+    <span class="quiz-logo">PSY · PRIJEMNI</span>
+    <div class="timer-pill" id="timer">⏱ 05:00</div>
+  </div>
+
+  <div class="prog-wrap">
+    <div class="prog-top">
+      <span id="prog-label">Pitanje 1 od 10</span>
+      <span id="prog-pct">0%</span>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <div id="q-wrap"></div>
+
+  <div class="nav">
+    <button class="btn-next" id="btn-next" disabled onclick="next()">Potvrdi odgovor</button>
+  </div>
+
+  <!-- Mini CTA posle poslednjeg pitanja -->
+  <div class="quiz-cta" id="quiz-cta">
+    <p>Ovo je samo <strong>10 od 300 pitanja</strong>. Puni set ima 5 baterija po 60 pitanja — sve oblasti prijemnog ispita, objašnjenja, tajmer.</p>
+    <a href="https://preforma.lemonsqueezy.com/checkout/buy/fc3f46a8-8ab9-430a-b2dd-c8401d36f5cc" target="_blank" class="btn-cta" style="font-size:14px;padding:13px;">
+      Kupi 5 baterija testova — 9,99 $ →
+    </a>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="result">
+  <div class="res-emoji" id="res-emoji"></div>
+  <div class="res-title" id="res-title"></div>
+  <div class="res-sub" id="res-sub"></div>
+
+  <div class="score-ring">
+    <div class="score-num" id="res-num"></div>
+    <div class="score-of">od 10</div>
+  </div>
+
+  <div class="res-grid">
+    <div class="res-stat"><div class="res-stat-val g" id="r-cor"></div><div class="res-stat-lab">Tačno</div></div>
+    <div class="res-stat"><div class="res-stat-val r" id="r-wr"></div><div class="res-stat-lab">Netačno</div></div>
+    <div class="res-stat"><div class="res-stat-val b" id="r-pct"></div><div class="res-stat-lab">Procenat</div></div>
+  </div>
+
+  <!-- GLAVNI CTA -->
+  <div class="cta-box">
+    <div class="cta-promo-badge">🔥 Ispit za nekoliko dana</div>
+    <h3>Spremi se ozbiljno.<br>300 pitanja te čeka.</h3>
+    <p class="cta-sub">
+      Demo ti je pokazao format. Pravi ispit na Filozofskom ima 30 pitanja iz psihologije i 30 iz opšte informisanosti — i svaka pogrešna smanjuje broj poena. Priprema se računa.
+    </p>
+    <div class="cta-features">
+      <div class="cta-feat"><span class="cta-feat-icon">✓</span><span><strong style="color:#fff">5 kompletnih baterija</strong> — 60 pitanja svaka, isti format kao pravi ispit</span></div>
+      <div class="cta-feat"><span class="cta-feat-icon">✓</span><span><strong style="color:#fff">Sve 17 oblasti</strong> programa: motivacija, pamćenje, ličnost, grupe, razvoj i sve ostalo</span></div>
+      <div class="cta-feat"><span class="cta-feat-icon">✓</span><span><strong style="color:#fff">Objašnjenje odmah</strong> posle svakog odgovora — ne samo šta je tačno, nego i zašto</span></div>
+      <div class="cta-feat"><span class="cta-feat-icon">✓</span><span><strong style="color:#fff">Tajmer 45 minuta</strong> po bateriji — navikavaš se na tempo pravog ispita</span></div>
+      <div class="cta-feat"><span class="cta-feat-icon">✓</span><span><strong style="color:#fff">Analiza rezultata</strong> po oblastima — vidiš tačno gde si slab/a</span></div>
+      <div class="cta-feat"><span class="cta-feat-icon">✓</span><span>Radi na telefonu, bez interneta, bez instalacije</span></div>
+    </div>
+    <div class="cta-price-row">
+      <div class="cta-price">9,99 $</div>
+      <div class="cta-price-note">Jednokratno · Doživotni pristup<br>≈ 1.000 din · Cena jedne kafe</div>
+    </div>
+    <a href="https://preforma.lemonsqueezy.com/checkout/buy/fc3f46a8-8ab9-430a-b2dd-c8401d36f5cc" target="_blank" class="btn-cta">
+      Kupi 5 baterija testova — 9,99 $ →
+    </a>
+    <p class="btn-cta-sub">Sigurna naplata · Odmah preuzimanje · Bez pretplate</p>
+  </div>
+
+  <button class="btn-retry" onclick="location.reload()">↺ Ponovi demo</button>
+</div>
+
+<script>
+const qs = [
+  { area:"Predmet psihologije", q:"Vilhelm Vundt je poznat kao osnivač eksperimentalne psihologije jer je 1879. otvorio:", opts:["Prvu psihijatrijsku bolnicu u Evropi","Prvi laboratorij za eksperimentalnu psihologiju u Lajpcigu","Prvu katedru za filozofiju u Berlinu","Prvu školu za bihejvioralno istraživanje","Prvu psihoanalitičku ordinaciju"], ans:1, exp:"Vundt je u Lajpcigu 1879. otvorio prvi psihološki laboratorij i time formalno utemeljio psihologiju kao empirijsku nauku." },
+  { area:"Učenje", q:"Pavlov je u svom čuvenom eksperimentu uslovio pse da luče pljuvačku na zvuk zvona. Ovo je primer:", opts:["Operantnog uslovljavanja","Socijalnog učenja posmatranjem","Klasičnog (respondentnog) uslovljavanja","Habitijacije","Kognitivnog prestrukturisanja"], ans:2, exp:"Klasično uslovljavanje: neutralni stimulus (zvono) se sparuje s bezuslovnim stimulusom (hrana) → na kraju zvono samo izaziva uslovnu reakciju (lučenje pljuvačke)." },
+  { area:"Pamćenje", q:"Kada staro gradivo ometa pamćenje novog gradiva, radi se o:", opts:["Proaktivnoj interferenciji","Retroaktivnoj interferenciji","Represiji","Disocijaciji","Konsolidaciji"], ans:0, exp:"Proaktivna interferencija: STARO znanje ometa pamćenje NOVOG. Retroaktivna je obrnuto — novo ometa staro." },
+  { area:"Opažanje", q:"Geštalt princip 'bliskosti' kaže da:", opts:["Slični elementi izgledaju kao da su grupisani","Elementi blizu jedan drugome percipiramo kao grupu","Percipiramo zatvorene oblike kao celine","Kretanje elemenata percipiramo zajedno","Pozadina uvek dominira nad figurom"], ans:1, exp:"Geštalt princip bliskosti: elemente koji su prostorno blizu jedan drugome prirodno opažamo kao grupu ili celinu." },
+  { area:"Motivacija", q:"Prema Maslovljevoj hijerarhiji, koje su potrebe na vrhu piramide (najvišeg nivoa)?", opts:["Fiziološke potrebe (hrana, voda)","Potrebe za sigurnošću","Potrebe za ljubavlju i pripadanjem","Potrebe za poštovanjem","Samoaktualizacija"], ans:4, exp:"Maslovljeva piramida: vrh je samoaktualizacija — ispunjenje sopstvenih potencijala. Aktivira se tek kad su sve niže potrebe zadovoljene." },
+  { area:"Ličnost", q:"Frojdov 'id' funkcioniše prema:", opts:["Principu realnosti","Principu zadovoljstva","Principu savesti","Principu logike","Principu homeostaze"], ans:1, exp:"Id je primitivan, nesvestan deo psihe koji teži isključivo neposrednom zadovoljenju nagona — radi po principu zadovoljstva, bez obzira na posledice." },
+  { area:"Emocije", q:"Pol Ekman je istraživanjima pokazao da postoje bazične emocije koje su:", opts:["Isključivo kulturno determinisane i uče se odrastanjem","Universalne i prepoznatljive u svim kulturama po izrazu lica","Specifične za zapadne civilizacije","Vezane samo za verbalni izraz","Prisutne samo kod odraslih"], ans:1, exp:"Ekman je istraživao izolisana plemena i dokazao da se 6 bazičnih emocija (sreća, tuga, strah, gađenje, bes, iznenađenje) prepoznaje globalno — urođene su, ne uče se." },
+  { area:"Istraživanja u psihologiji", q:"U psihološkom eksperimentu, zavisna promenljiva je:", opts:["Ona kojom istraživač manipuliše","Ona koja se meri kao ishod istraživanja","Kontrolna varijabla koja se drži konstantnom","Demografska karakteristika ispitanika","Varijabla koja se slučajno promeni"], ans:1, exp:"Zavisna promenljiva (ZP) je ono što merimo — ona 'zavisi' od nezavisne promenljive kojom istraživač manipuliše." },
+  { area:"Psihologija grupa", q:"Milgramov eksperiment poslušnosti je pokazao da je oko 65% ispitanika bilo voljno:", opts:["Odbiti svako naređenje autoriteta","Lagati eksperimentatoru","Pritisnuti dugme za maksimalni elektrošok od 450V po naređenju autoriteta","Napustiti eksperiment posle prvog šoka","Ignorisati plač žrtve i odmah stati"], ans:2, exp:"Milgram (1963): šokantnih 65% ispitanika poslušalo je naređenje do kraja (450V) — demonstrirano je da situacioni pritisak autoriteta snažno utiče na moralno ponašanje." },
+  { area:"Mišljenje", q:"Potvrđivačka pristranost (confirmation bias) opisuje tendenciju da:", opts:["Uvek menjamo stavove kada dobijemo nove informacije","Tražimo i interpretiramo informacije koje potvrđuju naša postojeća uverenja","Prihvatamo sve informacije podjednako kritički","Verujemo samo naučno dokazanim činjenicama","Brže obrađujemo negativne nego pozitivne informacije"], ans:1, exp:"Confirmation bias: selektivno tražimo, primećujemo i pamtimo informacije konzistentne s onim u šta već verujemo — i ignorišemo suprotne dokaze." },
+];
+
+let cur = 0, score = 0, answered = false, timerInt, timeLeft = 300;
+const LETTERS = ['A','B','C','D','E'];
+
+function startQuiz() {
+  document.getElementById('splash').style.display = 'none';
+  document.getElementById('quiz').style.display = 'block';
+  buildDots();
+  renderQ();
+  startTimer();
+}
+
+function buildDots() {
+  const d = document.getElementById('dots');
+  d.innerHTML = qs.map((_,i) => `<div class="dot${i===0?' active':''}" id="dot${i}"></div>`).join('');
+}
+
+function renderQ() {
+  const q = qs[cur];
+  answered = false;
+  document.getElementById('btn-next').disabled = true;
+  document.getElementById('btn-next').textContent = 'Potvrdi odgovor';
+  document.getElementById('prog-label').textContent = `Pitanje ${cur+1} od ${qs.length}`;
+  const pct = Math.round((cur / qs.length) * 100);
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('prog-fill').style.width = pct + '%';
+
+  document.getElementById('q-wrap').innerHTML = `
+    <div class="q-card">
+      <div class="q-area">${q.area}</div>
+      <div class="q-text" style="margin-bottom:22px">${q.q}</div>
+      <div class="options">
+        ${q.opts.map((o,i) => `
+          <div class="opt" id="opt${i}" onclick="pick(${i})">
+            <span class="opt-let">${LETTERS[i]}</span>
+            <span>${o}</span>
+          </div>`).join('')}
+      </div>
+      <div class="exp-box" id="exp"></div>
+    </div>`;
+}
+
+function pick(i) {
+  if (answered) return;
+  answered = true;
+  const q = qs[cur];
+  const isCorrect = i === q.ans;
+  if (isCorrect) score++;
+
+  for (let j = 0; j < q.opts.length; j++) {
+    const el = document.getElementById('opt' + j);
+    el.classList.add('locked');
+    if (j === q.ans) el.classList.add('correct');
+    else if (j === i && !isCorrect) el.classList.add('wrong');
+  }
+
+  const dot = document.getElementById('dot' + cur);
+  dot.classList.remove('active');
+  dot.classList.add(isCorrect ? 'correct' : 'wrong');
+
+  const exp = document.getElementById('exp');
+  exp.innerHTML = `<strong>${isCorrect ? '✓ Tačno!' : '✗ Netačno.'}</strong> ${q.exp}`;
+  exp.classList.add('show');
+
+  const btn = document.getElementById('btn-next');
+  btn.disabled = false;
+
+  if (cur < qs.length - 1) {
+    btn.textContent = 'Sledeće pitanje →';
+  } else {
+    btn.textContent = 'Vidi rezultat →';
+    // Show mini CTA after last question
+    document.getElementById('quiz-cta').classList.add('show');
+  }
+}
+
+function next() {
+  cur++;
+  if (cur >= qs.length) { showResult(); return; }
+  const d = document.getElementById('dot' + cur);
+  d.classList.add('active');
+  renderQ();
+}
+
+function startTimer() {
+  updateTimer();
+  timerInt = setInterval(() => {
+    timeLeft--;
+    updateTimer();
+    if (timeLeft <= 0) { clearInterval(timerInt); showResult(); }
+  }, 1000);
+}
+
+function updateTimer() {
+  const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+  const el = document.getElementById('timer');
+  el.textContent = `⏱ ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el.className = 'timer-pill' + (timeLeft < 60 ? ' danger' : timeLeft < 120 ? ' warn' : '');
+}
+
+function showResult() {
+  clearInterval(timerInt);
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('result').style.display = 'block';
+  const pct = Math.round((score / qs.length) * 100);
+  const data = [
+    { min:80, emoji:'🎉', title:'Odličan rezultat!', sub:'Vladaš gradivom. Puni test će te dovesti do maksimalnog skora na prijemnom.' },
+    { min:60, emoji:'👍', title:'Dobar rezultat!', sub:'Solidna osnova — ima oblasti gde možeš biti sigurniji. Puni test će zatvoriti praznine.' },
+    { min:40, emoji:'📚', title:'Ima prostora za napredak', sub:'Dosta toga nedostaje. Sada je pravo vreme da se ozbiljno pripremiš.' },
+    { min:0,  emoji:'💪', title:'Vrati se knjigama!', sub:'Ne brini — svaki počinje od nule. Pravi test ti pomaže da sistematično savladaš sve oblasti.' },
+  ];
+  const d = data.find(x => pct >= x.min);
+  document.getElementById('res-emoji').textContent = d.emoji;
+  document.getElementById('res-title').textContent = d.title;
+  document.getElementById('res-sub').textContent = d.sub;
+  document.getElementById('res-num').textContent = score;
+  document.getElementById('r-cor').textContent = score;
+  document.getElementById('r-wr').textContent = qs.length - score;
+  document.getElementById('r-pct').textContent = pct + '%';
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
